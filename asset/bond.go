@@ -1,7 +1,7 @@
 package asset
 
 import (
-	"lib/utils"
+	"github.com/goalm/lib/utils"
 	"math"
 )
 
