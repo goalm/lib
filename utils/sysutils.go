@@ -2,11 +2,24 @@ package utils
 
 import (
 	"embed"
+	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path"
+	"strings"
 	"syscall"
 )
+
+func GetUUID() string {
+	cmd := exec.Command("wmic", "path", "win32_computersystemproduct", "get", "uuid")
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Println(err)
+	}
+	uuid := strings.TrimSpace(string(out[5:]))
+	return uuid
+}
 
 func IsDir(path string) bool {
 	fileInfo, err := os.Stat(path)
