@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 )
@@ -27,6 +28,25 @@ func IsDir(path string) bool {
 		return false
 	}
 	return fileInfo.IsDir()
+}
+
+func GetFileList(root string, suffix string) (paths []string, err error) {
+	paths = make([]string, 0)
+	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+
+		if !info.IsDir() && strings.Contains(info.Name(), suffix) {
+			paths = append(paths, path)
+		}
+
+		return nil
+	})
+	return paths, err
 }
 
 func Hide(filename string) error {

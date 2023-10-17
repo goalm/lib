@@ -2,38 +2,36 @@ package utils
 
 import (
 	"log"
-	"os"
-	"sync"
 
-	"gopkg.in/yaml.v3"
+	"github.com/spf13/viper"
 )
 
-var (
-	once     sync.Once
-	instance *config
+const (
+	inputPath  = "./inputs"
+	configPath = "./config"
+	configType = "yaml"
 )
 
-type config struct {
-	TableLoc string `yaml:"TableLoc"`
-	Tables   `yaml:"Tables"`
+var RunSetting *viper.Viper
+
+func init() {
+	RunSetting = viper.New()
+	RunSetting.AddConfigPath(inputPath)
+	RunSetting.SetConfigName(configPath)
+	RunSetting.SetConfigType(configType)
+	ReadConfig(RunSetting)
 }
 
-type Tables struct {
-	AssetsBonds    string `yaml:"AssetsBonds"`
-	AssetsEquities string `yaml:"AssetsEquities"`
-	AssetsCash     string `yaml:"AssetsCash"`
+func ReadConfig(c *viper.Viper) {
+	if err := c.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Println("Config file not found")
+		} else {
+			log.Println("Config file found but error reading:", err)
+		}
+	}
 }
 
-func GetConfig() *config {
-	once.Do(func() {
-		yamlFile, err := os.ReadFile("./inputs/config.yaml")
-		if err != nil {
-			log.Fatalf("Error reading YAML file: %v", err)
-		}
-		err = yaml.Unmarshal(yamlFile, &instance)
-		if err != nil {
-			log.Fatalf("Error unmarshalling YAML file: %v", err)
-		}
-	})
-	return instance
+func GetFileName(s string) string {
+	return RunSetting.GetString("Tables." + s)
 }

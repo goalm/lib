@@ -13,6 +13,29 @@ func RemoveDup(this []*float64) []*float64 {
 	return tgt
 }
 
+func MapUniqValues[T comparable](m map[string]T) []T {
+	var uniqueValues []T
+	uniqueMap := make(map[T]bool)
+	for _, value := range m {
+		if _, ok := uniqueMap[value]; !ok {
+			uniqueValues = append(uniqueValues, value)
+			uniqueMap[value] = true
+		}
+	}
+
+	return uniqueValues
+}
+
+func MapContainsValue[K, V comparable](m map[K]V, value V) bool {
+	for _, v := range m {
+		if v == value {
+			return true
+		}
+	}
+
+	return false
+}
+
 func PivotFloat64(data any, tags []string, fieldsToSum []string) map[string]map[string]float64 {
 	pivot := make(map[string]map[string]float64)
 	listValue := reflect.ValueOf(data)
