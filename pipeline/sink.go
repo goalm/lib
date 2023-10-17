@@ -4,14 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"strconv"
 	"sync"
-
-	"github.com/goalm/app/dcs/config"
 )
 
 type SinkFunc func(s any) string
+
+type Writer struct {
+	File *os.File
+	Chn  chan string
+}
 
 type ISink interface {
 	Process(ctx context.Context, wg *sync.WaitGroup, dataChan <-chan any, errChan chan error)
@@ -45,10 +49,11 @@ func (s *ConsoleSink) Process(ctx context.Context, wg *sync.WaitGroup, dataChan 
 
 type ModelSink struct {
 	Fn SinkFunc
+	Ws map[string]*Writer
 }
 
-func NewModelSink(fn SinkFunc) *ModelSink {
-	return &ModelSink{fn}
+func NewModelSink(fn SinkFunc, ws map[string]*Writer) *ModelSink {
+	return &ModelSink{fn, ws}
 }
 
 func (s *ModelSink) Process(ctx context.Context, wg *sync.WaitGroup, dataChan <-chan any, errChan chan error) {
@@ -60,12 +65,12 @@ func (s *ModelSink) Process(ctx context.Context, wg *sync.WaitGroup, dataChan <-
 				if ok {
 					// dispatch to different files
 					pName := s.Fn(val)
-					config.Writers[pName].Chn <- cacheData(val)
+					s.Ws[pName].Chn <- cacheData(val)
 
 				} else {
 					log.Println("sink data channel closed!")
 					// close all channels
-					for _, v := range config.Writers {
+					for _, v := range s.Ws {
 						close(v.Chn)
 					}
 					return
@@ -79,7 +84,7 @@ func (s *ModelSink) Output(ctx context.Context, wg *sync.WaitGroup, errChan chan
 	go func() {
 		defer wg.Done()
 		wg2 := sync.WaitGroup{}
-		output := func(w *config.Writer) {
+		output := func(w *Writer) {
 			for v := range w.Chn {
 				_, err := w.File.WriteString(v + "\r\n")
 				if err != nil {
@@ -90,8 +95,8 @@ func (s *ModelSink) Output(ctx context.Context, wg *sync.WaitGroup, errChan chan
 			wg2.Done()
 		}
 
-		wg2.Add(len(config.Writers))
-		for _, w := range config.Writers {
+		wg2.Add(len(s.Ws))
+		for _, w := range s.Ws {
 			go output(w)
 		}
 		go func() {
