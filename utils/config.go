@@ -7,19 +7,19 @@ import (
 )
 
 const (
-	inputPath  = "./inputs"
-	configPath = "./config"
+	inputPath  = "inputs"
+	configName = "config"
 	configType = "yaml"
 )
 
-var RunSetting *viper.Viper
+var Conf *viper.Viper
 
 func init() {
-	RunSetting = viper.New()
-	RunSetting.AddConfigPath(inputPath)
-	RunSetting.SetConfigName(configPath)
-	RunSetting.SetConfigType(configType)
-	ReadConfig(RunSetting)
+	Conf = viper.New()
+	Conf.AddConfigPath(inputPath)
+	Conf.SetConfigName(configName)
+	Conf.SetConfigType(configType)
+	ReadConfig(Conf)
 }
 
 func ReadConfig(c *viper.Viper) {
@@ -33,5 +33,25 @@ func ReadConfig(c *viper.Viper) {
 }
 
 func GetFileName(s string) string {
-	return RunSetting.GetString("Tables." + s)
+	return Conf.GetString("Tables." + s)
+}
+
+func GetOutPath(s string) string {
+	return Conf.GetString("OutPath." + s)
+}
+
+func GetPaths(s string) string {
+	return Conf.GetString("Paths." + s)
+}
+
+type FormulaParserRun struct {
+	Name    string
+	PrdFile string
+	LibFile string
+}
+
+func GetFormulaParserRuns() []FormulaParserRun {
+	var runs []FormulaParserRun
+	Conf.UnmarshalKey("Runs", &runs)
+	return runs
 }

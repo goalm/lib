@@ -5,6 +5,53 @@ import (
 	"reflect"
 )
 
+func computeLPSArray(pattern string) []int {
+	var length = 0
+	var i = 1
+	var patternLength = len(pattern)
+
+	var lps = make([]int, patternLength)
+
+	lps[0] = 0
+
+	for i = 1; i < patternLength; {
+		if pattern[i] == pattern[length] {
+			length++
+			lps[i] = length
+			i++
+
+		} else {
+
+			if length != 0 {
+				length = lps[length-1]
+
+			} else {
+				lps[i] = length
+				i++
+			}
+		}
+	}
+	return lps
+}
+
+func checkIfWholeWord(text string, startIndex int, endIndex int) bool {
+	startIndex = startIndex - 1
+	endIndex = endIndex + 1
+
+	if (startIndex < 0 && endIndex >= len(text)) ||
+		(startIndex < 0 && endIndex < len(text) && isNonWord(text[endIndex])) ||
+		(startIndex >= 0 && endIndex >= len(text) && isNonWord(text[startIndex])) ||
+		(startIndex >= 0 && endIndex < len(text) && isNonWord(text[startIndex]) && isNonWord(text[endIndex])) {
+		return true
+	}
+
+	return false
+}
+
+func isNonWord(c byte) bool {
+	return !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_'))
+}
+
 func RemoveDup(this []*float64) []*float64 {
 	tgt := this[:1]
 	for _, v := range this {
