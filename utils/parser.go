@@ -134,6 +134,8 @@ func (p *Parser) isChar(c byte) bool {
 		'0' <= c && c <= '9' ||
 		c == '(' ||
 		c == ')' ||
+		c == ':' ||
+		c == ',' ||
 		c == '_'
 
 }

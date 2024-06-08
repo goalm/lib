@@ -1,4 +1,6 @@
-package utils
+//go:build windows
+
+package win
 
 import (
 	"embed"

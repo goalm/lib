@@ -1,4 +1,6 @@
-package utils
+//go:build windows
+
+package win
 
 import (
 	"fmt"
@@ -33,7 +35,7 @@ func GetFileList(root string, suffix string) (paths []string, err error) {
 		if err != nil {
 			return err
 		}
-		if !info.Mode().IsRegular() {
+		if info.Mode().IsDir() {
 			return nil
 		}
 

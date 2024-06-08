@@ -1,4 +1,6 @@
-package utils
+//go:build windows
+
+package win
 
 import (
 	"encoding/json"
@@ -8,8 +10,10 @@ import (
 	"time"
 )
 
-const LicFile = "lic.json"
-const ExpDate = "12/31/2024"
+const (
+	LicFile = "lic.json"
+	ExpDate = "12/31/2024"
+)
 
 type User struct {
 	Name string `json:"Name"`
@@ -52,8 +56,6 @@ func beforeExpDate() bool {
 
 	if currTime < expDateStamp {
 		log.Println(expDate.Year(), expDate.Month(), expDate.Day())
-		log.Println("Spyper started ...")
-		fmt.Println("Spyper started ...")
 	} else {
 		fmt.Println("Please reach out to Molly / Martin to request an updated version.")
 		log.Println("Please reach out to Molly / Martin to request an updated version.")

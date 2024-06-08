@@ -44,6 +44,7 @@ func GetPaths(s string) string {
 	return Conf.GetString("Paths." + s)
 }
 
+// For formula parser
 type FormulaParserRun struct {
 	Name    string
 	PrdFile string
@@ -54,4 +55,9 @@ func GetFormulaParserRuns() []FormulaParserRun {
 	var runs []FormulaParserRun
 	Conf.UnmarshalKey("Runs", &runs)
 	return runs
+}
+
+// For Deterministic model
+func GetTbl(s string) string {
+	return GetPaths("inPath") + "/" + Conf.GetString("Tables."+s)
 }
