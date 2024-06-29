@@ -1,12 +1,49 @@
 package utils
 
 import (
+	"bufio"
 	"encoding/csv"
-	"github.com/jszwec/csvutil"
 	"io"
 	"log"
 	"os"
+
+	"github.com/jszwec/csvutil"
 )
+
+func LoadFileToStruct[T any](fileName string, skipLines int, dataStruct T) []*T {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+	for i := 0; i < skipLines; i++ {
+		_, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	csvReader := csv.NewReader(reader)
+	dec, err := csvutil.NewDecoder(csvReader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var data []*T
+	for {
+		record := dataStruct
+		if err := dec.Decode(&record); err == io.EOF {
+			break
+		} else if err != nil {
+			log.Println("Error reading " + fileName + ": " + err.Error())
+			break
+		}
+
+		data = append(data, &record)
+	}
+	return data
+}
 
 func LoadCsv[T any](fileName string, row T) []*T {
 	file, err := os.Open(fileName)
@@ -25,7 +62,8 @@ func LoadCsv[T any](fileName string, row T) []*T {
 		if err := dec.Decode(&record); err == io.EOF {
 			break
 		} else if err != nil {
-			log.Fatal(err)
+			log.Println("Error reading " + fileName + ": " + err.Error())
+			break
 		}
 
 		data = append(data, &record)

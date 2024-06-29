@@ -2,32 +2,39 @@ package utils
 
 import (
 	"bufio"
-	"context"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
-var ctx = context.Background()
+var Rdb *redis.Client
+var once sync.Once
 
 func GetRedisClient() *redis.Client {
-	return redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+	once.Do(func() {
+		Rdb = redis.NewClient(&redis.Options{
+			Addr:         "localhost:6379",
+			Password:     "", // no password set
+			DB:           0,  // use default DB
+			WriteTimeout: 1000 * time.Second,
+		})
+
 	})
+	return Rdb
 }
 
-func LoadFacToRedis(tblPath, tblName string, rdb *redis.Client) {
-	// LoadFacToRedis loads a fac file to redis
+func LoadFacToRedisHash(tblName string) {
+	// PipeFacToRedis loads a fac file to redis using pipeline mode
+	tblPath := FindFile(tblName)
 	if !strings.HasSuffix(tblPath, ".fac") {
 		// error
 		panic("Not a fac file")
 
 	} else {
-
 		f, err := os.Open(tblPath)
 		if err != nil {
 			panic(err)
@@ -39,25 +46,34 @@ func LoadFacToRedis(tblPath, tblName string, rdb *redis.Client) {
 			textlines = append(textlines, scanner.Text())
 		}
 
-		rowIdxes := make([]string, 0)
-		colIdxes := make([]string, 0)
+		keyNames := make([]string, 0)
+		hashKeys := make([]string, 0)
 		noIdx := 0
 
+		pipe := Rdb.Pipeline()
 		for _, line := range textlines {
-			// line
+
+			line = strings.ReplaceAll(line, "\"", "")
 			// Header
 			if strings.HasPrefix(line, "!") {
 				noIdx, err = strconv.Atoi(line[1:2])
 				if err != nil {
 					panic(err)
 				}
+				noKeys := noIdx - 1
+				if noKeys < 1 {
+					panic(tblName + " has no keys")
+				}
 
+				// remove ""
 				str := strings.Split(line, ",")
-				rowIdxes = str[1:noIdx]
-				colIdxes = str[noIdx:]
-				rdb.Set(ctx, tblName+":Idxes", strings.Join(rowIdxes, ", "), 0)
-			}
+				keyNames = str[1:noIdx]
+				hashKeys = str[noIdx:]
 
+				pipe.RPush(ctx, tblName+":000Key1", keyNames)
+				pipe.RPush(ctx, tblName+":000Key2", hashKeys)
+			}
+			// Records
 			if strings.HasPrefix(line, "*") {
 				//process records
 				str := strings.Split(line, ",")
@@ -68,12 +84,15 @@ func LoadFacToRedis(tblPath, tblName string, rdb *redis.Client) {
 					key = key + ":" + v
 				}
 
-				colKeys := str[noIdx:]
-				for i, v := range colKeys {
-					rdb.HSet(ctx, tblName+":"+key, colIdxes[i], v)
+				hashValues := str[noIdx:]
+				for i, v := range hashValues {
+					pipe.HSet(ctx, tblName+":"+key, hashKeys[i], v)
 				}
 			}
 		}
-
+		_, err = pipe.Exec(ctx)
+		if err != nil {
+			panic(err)
+		}
 	}
 }

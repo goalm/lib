@@ -5,6 +5,10 @@ import (
 	"os"
 )
 
+func init() {
+	SetLogOutput()
+}
+
 func SetLogOutput() {
 	file := "./" + "log" + ".txt"
 	logFile, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0766)
