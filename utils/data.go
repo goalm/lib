@@ -5,6 +5,18 @@ import (
 	"reflect"
 )
 
+func FindFieldByName[T any](s T, fieldName string) reflect.Value {
+	val := reflect.ValueOf(s).Elem()       // 获取指向结构体的指针的反射值
+	fieldVal := val.FieldByName(fieldName) // 根据字段名称获取字段的反射值
+
+	// 检查字段是否存在
+	if !fieldVal.IsValid() {
+		fmt.Println("Field not found")
+		return reflect.Value{}
+	}
+	return fieldVal
+}
+
 func computeLPSArray(pattern string) []int {
 	var length = 0
 	var i = 1
