@@ -6,9 +6,54 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/jszwec/csvutil"
 )
+
+func LoadProphetMpToStruct[T any](fileName string, dataStruct T) []*T {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	skipped := false
+
+	if !skipped {
+		for {
+			str, err := reader.ReadString('\n')
+			if err != nil {
+				log.Fatal(err)
+			}
+			if strings.HasPrefix(str, "VARIABLE_TYPES") {
+				break
+			}
+		}
+		skipped = true
+	}
+
+	csvReader := csv.NewReader(reader)
+	dec, err := csvutil.NewDecoder(csvReader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var data []*T
+	for {
+		record := dataStruct
+		if err := dec.Decode(&record); err == io.EOF {
+			break
+		} else if err != nil {
+			log.Println("Error reading " + fileName + ": " + err.Error())
+			break
+		}
+
+		data = append(data, &record)
+	}
+	return data
+}
 
 func LoadFileToStruct[T any](fileName string, skipLines int, dataStruct T) []*T {
 	file, err := os.Open(fileName)
