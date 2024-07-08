@@ -6,10 +6,138 @@ import (
 	"io"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/jszwec/csvutil"
 )
+
+type FacMap struct {
+	noIdx int
+	data  map[string]string
+}
+
+func LoadFacToMap(filePath string) map[string]string {
+	m := make(map[string]string)
+	if IsFac(filePath) {
+		file, err := os.Open(filePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		noIdx := 0
+		hashKeys := make([]string, 0)
+		scanner := bufio.NewScanner(file)
+
+		for scanner.Scan() {
+			line := scanner.Text()
+			line = strings.ReplaceAll(line, "\"", "")
+			// end of file
+			if line == "\xA0" || line == "" {
+				break
+			}
+			// dump descriptions
+			if line[0] != '!' && line[0] != '*' {
+				continue
+			}
+			// process header
+			if line[0] == '!' {
+				noIdx, err = strconv.Atoi(line[1:2])
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if noIdx < 1 {
+					log.Fatal("Table has no keys")
+				}
+
+				str := strings.Split(line, ",")
+				hashKeys = str[noIdx:]
+
+			} else if line[0] == '*' {
+				// Records
+				str := strings.Split(line, ",")
+				rowKeys := str[1:noIdx]
+
+				key := rowKeys[0]
+				for _, v := range rowKeys[1:] {
+					key = key + ":" + v
+				}
+
+				for i, v := range hashKeys {
+					m[key+":"+v] = str[noIdx+i]
+				}
+
+			}
+
+		}
+
+	} else {
+		log.Fatal("File is not a .fac file")
+	}
+
+	return m
+}
+
+func LoadFacToHashMap(filePath string) map[string]map[string]string {
+	m := make(map[string]map[string]string)
+	if IsFac(filePath) {
+		file, err := os.Open(filePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		noIdx := 0
+		hashKeys := make([]string, 0)
+		scanner := bufio.NewScanner(file)
+
+		for scanner.Scan() {
+			line := scanner.Text()
+			line = strings.ReplaceAll(line, "\"", "")
+			// dump descriptions
+			if line[0] != '!' && line[0] != '*' {
+				continue
+			}
+			// process header
+			if line[0] == '!' {
+				noIdx, err = strconv.Atoi(line[1:2])
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if noIdx < 1 {
+					log.Fatal("Table has no keys")
+				}
+
+				str := strings.Split(line, ",")
+				hashKeys = str[noIdx:]
+
+			} else if line[0] == '*' {
+				// Records
+				str := strings.Split(line, ",")
+				rowKeys := str[1:noIdx]
+
+				key := rowKeys[0]
+				for _, v := range rowKeys[1:] {
+					key = key + ":" + v
+				}
+
+				h := make(map[string]string)
+				for i, v := range hashKeys {
+					h[v] = str[noIdx+i]
+				}
+				m[key] = h
+			}
+		}
+
+	} else {
+		log.Fatal("File is not a .fac file")
+	}
+
+	return m
+}
 
 func LoadProphetMpToStruct[T any](fileName string, dataStruct T) []*T {
 	file, err := os.Open(fileName)

@@ -3,18 +3,98 @@ package utils
 import (
 	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 )
 
-func FindFieldByName[T any](s T, fieldName string) reflect.Value {
-	val := reflect.ValueOf(s).Elem()       // 获取指向结构体的指针的反射值
-	fieldVal := val.FieldByName(fieldName) // 根据字段名称获取字段的反射值
+func RecordToCsvString[T any](record T, suffix string) string {
+	val := reflect.ValueOf(record)
+	typ := reflect.TypeOf(record)
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+		val = val.Elem()
+	}
 
-	// 检查字段是否存在
+	fields := suffix
+	for i := 0; i < val.NumField(); i++ {
+		f := val.Field(i)
+		res := f.String()
+		switch f.Type().String() {
+		case "int":
+			res = strconv.Itoa(f.Interface().(int))
+			if res == "" {
+				res = "0"
+			}
+		case "float64":
+			res = strconv.FormatFloat(f.Interface().(float64), 'f', 2, 64)
+			if res == "" {
+				res = "0.0"
+			}
+
+		case "string":
+			if res == "" {
+				res = "-"
+			}
+			res = `"` + res + `"`
+
+		case "[]int":
+			res = "["
+			for _, v := range f.Interface().([]int) {
+				res = res + strconv.Itoa(v) + " "
+			}
+			res = res + "]"
+
+		case "[]float64":
+			res = "["
+			for _, v := range f.Interface().([]float64) {
+				res = res + strconv.FormatFloat(v, 'f', 2, 64) + " "
+			}
+			res = res + "]"
+
+		case "[]string":
+			res = "["
+			for _, v := range f.Interface().([]string) {
+				res = res + `"` + v + `"` + " "
+			}
+			res = res + "]"
+		}
+
+		fields = fields + "," + res
+	}
+	return fields
+}
+
+func FieldsToCsvString[T any](a T, suffix string) string {
+	val := reflect.ValueOf(a)
+	typ := reflect.TypeOf(a)
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+		val = val.Elem()
+	}
+
+	fields := suffix
+	for i := 0; i < val.NumField(); i++ {
+		fields = fields + "," + typ.Field(i).Name
+	}
+	return fields
+}
+
+func FindFieldByName[T any](s T, fieldName string) reflect.Value {
+	val := reflect.ValueOf(s).Elem()
+	fieldVal := val.FieldByName(fieldName)
+
 	if !fieldVal.IsValid() {
 		fmt.Println("Field not found")
 		return reflect.Value{}
 	}
 	return fieldVal
+}
+
+func IsFac(filePath string) bool {
+	if strings.HasSuffix(filePath, ".fac") || strings.HasSuffix(filePath, ".FAC") {
+		return true
+	}
+	return false
 }
 
 func computeLPSArray(pattern string) []int {

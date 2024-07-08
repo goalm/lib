@@ -85,6 +85,14 @@ func FindFile(tbl string) (fileLoc string) {
 	return
 }
 
+func GetDataFile(tbl string) string {
+	return Conf.GetString("data." + tbl)
+}
+
+func GetTable(tbl string) string {
+	return Conf.GetString("tables." + tbl)
+}
+
 func GetFileName(s string) string {
 	return Conf.GetString("Tables." + s)
 }
