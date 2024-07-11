@@ -32,7 +32,6 @@ func LoadFacToMap(filePath string) map[string]string {
 
 		for scanner.Scan() {
 			line := scanner.Text()
-			line = strings.ReplaceAll(line, "\"", "")
 			// end of file
 			if line == "\xA0" || line == "" {
 				break
@@ -41,6 +40,8 @@ func LoadFacToMap(filePath string) map[string]string {
 			if line[0] != '!' && line[0] != '*' {
 				continue
 			}
+
+			line = strings.ReplaceAll(line, "\"", "")
 			// process header
 			if line[0] == '!' {
 				noIdx, err = strconv.Atoi(line[1:2])
@@ -68,9 +69,7 @@ func LoadFacToMap(filePath string) map[string]string {
 				for i, v := range hashKeys {
 					m[key+":"+v] = str[noIdx+i]
 				}
-
 			}
-
 		}
 
 	} else {

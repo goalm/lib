@@ -92,6 +92,9 @@ func GetDataFile(tbl string) string {
 func GetTable(tbl string) string {
 	return Conf.GetString("tables." + tbl)
 }
+func GetTableName(tbl string) string {
+	return Conf.GetString("tableNames." + tbl)
+}
 
 func GetFileName(s string) string {
 	return Conf.GetString("Tables." + s)
