@@ -138,7 +138,7 @@ func LoadFacToHashMap(filePath string) map[string]map[string]string {
 	return m
 }
 
-func LoadProphetMpToStruct[T any](fileName string, dataStruct T) []*T {
+func LoadPropMpToChn[T any](fileName string, dataStruct T, dataChn chan *T) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal(err)
@@ -146,7 +146,49 @@ func LoadProphetMpToStruct[T any](fileName string, dataStruct T) []*T {
 	defer file.Close()
 
 	reader := bufio.NewReader(file)
+	skipped := false
 
+	if !skipped {
+		for {
+			str, err := reader.ReadString('\n')
+			if err != nil {
+				log.Fatal(err)
+			}
+			if strings.HasPrefix(str, "VARIABLE_TYPES") {
+				break
+			}
+		}
+		skipped = true
+	}
+
+	csvReader := csv.NewReader(reader)
+	dec, err := csvutil.NewDecoder(csvReader)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for {
+		record := dataStruct
+		if err := dec.Decode(&record); err == io.EOF {
+			close(dataChn)
+			break
+		} else if err != nil {
+			log.Println("Error reading " + fileName + ": " + err.Error())
+			close(dataChn)
+			break
+		}
+		dataChn <- &record
+	}
+}
+
+func LoadPropMpToStruct[T any](fileName string, dataStruct T) []*T {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
 	skipped := false
 
 	if !skipped {
