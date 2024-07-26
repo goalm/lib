@@ -12,9 +12,33 @@ import (
 	"github.com/jszwec/csvutil"
 )
 
-type FacMap struct {
-	noIdx int
-	data  map[string]string
+func LoadCsvToEnum(filePath string) *Enum {
+	m := NewEnum()
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for i, record := range records {
+		if i == 0 {
+			m.SetNames(record[0], record[1])
+
+		} else {
+			k, err := strconv.Atoi(record[0])
+			if err != nil {
+				log.Fatal(err)
+			}
+			m.Add(k, record[1])
+		}
+	}
+	return m
 }
 
 func LoadFacToMap(filePath string) map[string]string {
@@ -146,19 +170,15 @@ func LoadPropMpToChn[T any](fileName string, dataStruct T, dataChn chan *T) {
 	defer file.Close()
 
 	reader := bufio.NewReader(file)
-	skipped := false
 
-	if !skipped {
-		for {
-			str, err := reader.ReadString('\n')
-			if err != nil {
-				log.Fatal(err)
-			}
-			if strings.HasPrefix(str, "VARIABLE_TYPES") {
-				break
-			}
+	for {
+		str, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
 		}
-		skipped = true
+		if strings.HasPrefix(str, "VARIABLE_TYPES") {
+			break
+		}
 	}
 
 	csvReader := csv.NewReader(reader)

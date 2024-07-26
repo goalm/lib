@@ -79,15 +79,15 @@ func FieldsToCsvString[T any](a T, suffix string) string {
 	return fields
 }
 
-func FindFieldByName[T any](s T, fieldName string) reflect.Value {
+func FindFieldByName[T any](s T, fieldName string) (reflect.Value, bool) {
 	val := reflect.ValueOf(s).Elem()
 	fieldVal := val.FieldByName(fieldName)
 
 	if !fieldVal.IsValid() {
 		fmt.Println("Field not found")
-		return reflect.Value{}
+		return reflect.Value{}, false
 	}
-	return fieldVal
+	return fieldVal, true
 }
 
 func IsFac(filePath string) bool {

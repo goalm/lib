@@ -19,6 +19,8 @@ var ctx context.Context
 var Conf *viper.Viper
 var TableLocs []string
 var Tables []string
+var Enums []string
+var EnumLocs []string
 var MpLocs []string
 var Mps []string
 
@@ -32,6 +34,8 @@ func init() {
 	ReadConfig(Conf)
 	TableLocs = Conf.GetStringSlice("paths.tableLocs")
 	Tables = Conf.GetStringSlice("tables")
+	Enums = Conf.GetStringSlice("enums")
+	EnumLocs = Conf.GetStringSlice("paths.enumLocs")
 	MpLocs = Conf.GetStringSlice("paths.mpLocs")
 	Mps = Conf.GetStringSlice("mpFiles")
 }
@@ -94,6 +98,10 @@ func GetTable(tbl string) string {
 }
 func GetTableName(tbl string) string {
 	return Conf.GetString("tableNames." + tbl)
+}
+
+func GetEnumName(enm string) string {
+	return Conf.GetString("enumNames." + enm)
 }
 
 func GetFileName(s string) string {
