@@ -38,25 +38,25 @@ func RecordToCsvString[T any](record T, suffix string) string {
 			res = `"` + res + `"`
 
 		case "[]int":
-			res = "["
+			res = ""
 			for _, v := range f.Interface().([]int) {
-				res = res + strconv.Itoa(v) + " "
+				res = res + strconv.Itoa(v) + ","
 			}
-			res = res + "]"
+			res = res + ","
 
 		case "[]float64":
-			res = "["
+			res = ""
 			for _, v := range f.Interface().([]float64) {
-				res = res + strconv.FormatFloat(v, 'f', 2, 64) + " "
+				res = res + strconv.FormatFloat(v, 'f', 2, 64) + ","
 			}
-			res = res + "]"
+			res = res + ","
 
 		case "[]string":
-			res = "["
+			res = ""
 			for _, v := range f.Interface().([]string) {
-				res = res + `"` + v + `"` + " "
+				res = res + `"` + v + `"` + ","
 			}
-			res = res + "]"
+			res = res + ","
 		}
 
 		fields = fields + "," + res
@@ -74,7 +74,13 @@ func FieldsToCsvString[T any](a T, suffix string) string {
 
 	fields := suffix
 	for i := 0; i < val.NumField(); i++ {
-		fields = fields + "," + typ.Field(i).Name
+		if typ.Field(i).Type.Kind() != reflect.Slice {
+			fields = fields + "," + typ.Field(i).Name
+		} else {
+			for j := 0; j < val.Field(i).Cap(); j++ {
+				fields = fields + "," + typ.Field(i).Name + "(" + strconv.Itoa(j+1) + ")"
+			}
+		}
 	}
 	return fields
 }
