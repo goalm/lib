@@ -35,3 +35,7 @@ func (m *Enum) StrToInt(b string) (int, bool) {
 	a, ok := m.bw[b]
 	return a, ok
 }
+
+func (m *Enum) Size() int {
+	return len(m.fw)
+}
