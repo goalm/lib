@@ -39,24 +39,30 @@ func RecordToCsvString[T any](record T, suffix string) string {
 
 		case "[]int":
 			res = ""
-			for _, v := range f.Interface().([]int) {
-				res = res + strconv.Itoa(v) + ","
+			cap := val.Field(i).Cap()
+			s := f.Interface().([]int)
+			for j := 0; j < cap-1; j++ {
+				res = res + strconv.Itoa(s[j]) + ","
 			}
-			res = res + ","
+			res = res + strconv.Itoa(s[cap-1])
 
 		case "[]float64":
 			res = ""
-			for _, v := range f.Interface().([]float64) {
-				res = res + strconv.FormatFloat(v, 'f', 2, 64) + ","
+			cap := val.Field(i).Cap()
+			s := f.Interface().([]float64)
+			for j := 0; j < cap-1; j++ {
+				res = res + strconv.FormatFloat(s[j], 'f', 2, 64) + ","
 			}
-			res = res + ","
+			res = res + strconv.FormatFloat(s[cap-1], 'f', 2, 64)
 
 		case "[]string":
 			res = ""
-			for _, v := range f.Interface().([]string) {
-				res = res + `"` + v + `"` + ","
+			cap := val.Field(i).Cap()
+			s := f.Interface().([]string)
+			for j := 0; j < cap-1; j++ {
+				res = res + s[j] + ","
 			}
-			res = res + ","
+			res = res + s[cap-1]
 		}
 
 		fields = fields + "," + res
