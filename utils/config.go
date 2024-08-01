@@ -2,11 +2,8 @@ package utils
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"os"
-
 	"github.com/spf13/viper"
+	"log"
 )
 
 const (
@@ -50,52 +47,6 @@ func ReadConfig(c *viper.Viper) {
 	}
 }
 
-func FindMp(fileName string) (fileLoc string) {
-	for _, path := range MpLocs {
-		files, err := os.ReadDir(path)
-		if err != nil {
-			fmt.Println("Error reading directory " + path)
-			continue
-		}
-		for _, file := range files {
-			if file.Name() == fileName {
-				fileLoc = path + "/" + fileName
-				log.Println(fileName+" found at: ", fileLoc)
-				return
-			}
-		}
-	}
-	fmt.Println("Model Point " + fileName + " not found in any of the paths")
-	return
-}
-
-func FindFile(tbl string) (fileLoc string) {
-	fileName := Conf.GetString("fileNames." + tbl)
-	for _, path := range TableLocs {
-		files, err := os.ReadDir(path)
-		if err != nil {
-			fmt.Println("Error reading directory " + path)
-			continue
-		}
-		for _, file := range files {
-			if file.Name() == fileName {
-				fileLoc = path + "/" + fileName
-				log.Println(fileName+" found at: ", fileLoc)
-				return
-			}
-		}
-	}
-	fmt.Println("Table " + fileName + " not found in any of the paths")
-	return
-}
-
-func GetDataFile(tbl string) string {
-	return Conf.GetString("data." + tbl)
-}
-
-func GetTable(tbl string) string {
-	return Conf.GetString("tables." + tbl)
-}
 func GetTableName(tbl string) string {
 	return Conf.GetString("tableNames." + tbl)
 }
@@ -106,11 +57,6 @@ func GetEnumName(enm string) string {
 
 func GetFileName(s string) string {
 	return Conf.GetString("Tables." + s)
-}
-
-// todo: remove this function
-func GetPaths(s string) string {
-	return Conf.GetString("Paths." + s)
 }
 
 // For formula parser
