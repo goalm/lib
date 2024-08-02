@@ -49,11 +49,16 @@ func RecordToCsvString[T any](record T, suffix string) string {
 		case "[]float64":
 			res = ""
 			cap := val.Field(i).Cap()
-			s := f.Interface().([]float64)
-			for j := 0; j < cap-1; j++ {
-				res = res + strconv.FormatFloat(s[j], 'f', 2, 64) + ","
+			if cap == 0 {
+				res = "0.0"
+			} else {
+				s := f.Interface().([]float64)
+				for j := 0; j < cap-1; j++ {
+					res = res + strconv.FormatFloat(s[j], 'f', 2, 64) + ","
+				}
+				//todo: remove max(0, ...)
+				res = res + strconv.FormatFloat(s[cap-1], 'f', 2, 64)
 			}
-			res = res + strconv.FormatFloat(s[cap-1], 'f', 2, 64)
 
 		case "[]string":
 			res = ""
