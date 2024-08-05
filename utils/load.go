@@ -3,11 +3,13 @@ package utils
 import (
 	"bufio"
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jszwec/csvutil"
 )
@@ -104,6 +106,7 @@ func LoadFacToMap(filePath string) map[string]string {
 }
 
 func LoadFacToHashMap(filePath string) map[string]map[string]string {
+	start := time.Now()
 	m := make(map[string]map[string]string)
 	if IsFac(filePath) {
 		file, err := os.Open(filePath)
@@ -118,11 +121,17 @@ func LoadFacToHashMap(filePath string) map[string]map[string]string {
 
 		for scanner.Scan() {
 			line := scanner.Text()
-			line = strings.ReplaceAll(line, "\"", "")
+
+			// end of file
+			if line == "\xA0" || line == "" {
+				break
+			}
 			// dump descriptions
 			if line[0] != '!' && line[0] != '*' {
 				continue
 			}
+
+			line = strings.ReplaceAll(line, "\"", "")
 			// process header
 			if line[0] == '!' {
 				noIdx, err = strconv.Atoi(line[1:2])
@@ -159,6 +168,7 @@ func LoadFacToHashMap(filePath string) map[string]map[string]string {
 		log.Fatal("File is not a .fac file")
 	}
 
+	fmt.Printf("Time taken to load fac file %s: %v ", filePath, time.Since(start))
 	return m
 }
 

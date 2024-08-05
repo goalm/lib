@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -114,6 +115,14 @@ func IsFac(filePath string) bool {
 	return false
 }
 
+func FilePathToName(str string) (string, error) {
+	re := regexp.MustCompile(`[\/|\\]*(\w*)\.\w*$`)
+	match := re.FindStringSubmatch(str)
+	if len(match) > 0 {
+		return match[1], nil
+	}
+	return "", fmt.Errorf("No match found")
+}
 func computeLPSArray(pattern string) []int {
 	var length = 0
 	var i = 1
