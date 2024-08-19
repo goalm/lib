@@ -5,6 +5,7 @@ go 1.22
 require (
 	github.com/VictoriaMetrics/fastcache v1.12.2
 	github.com/allegro/bigcache/v3 v3.1.0
+	github.com/buger/jsonparser v1.1.1
 	github.com/jszwec/csvutil v1.10.0
 	github.com/qiniu/qmgo v1.1.8
 	github.com/redis/go-redis/v9 v9.5.1
