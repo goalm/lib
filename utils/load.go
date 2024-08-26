@@ -32,7 +32,6 @@ func LoadCsvToEnum(filePath string) *Enum {
 	for i, record := range records {
 		if i == 0 {
 			m.SetNames(record[0], record[1])
-
 		} else {
 			k, err := strconv.Atoi(record[0])
 			if err != nil {
@@ -56,6 +55,7 @@ func StreamGenericFiles[T any](filePaths []string, row T, dataChn chan *T) {
 	wg.Wait()
 	close(dataChn)
 }
+
 func StreamGenericCsvFile[T any](filePath string, row T, dataChn chan *T) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -124,6 +124,67 @@ func StreamGenericCsvFile[T any](filePath string, row T, dataChn chan *T) {
 		//		log.Fatal(err)
 		//	}
 		//}
+		dataChn <- &record
+	}
+}
+
+// for MP source with header and contents in the same file
+func StreamGenericTxtFile[T any](filePath string, headerLine int, row T, dataChn chan *T) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	reader := bufio.NewReaderSize(file, 1024*1024)
+	// Skip the header lines
+	l := 0
+	for {
+		_, err := reader.Peek(1)
+		if err != nil {
+			if err.Error() == "EOF" {
+				log.Printf("Reading completed for %s, %s lines in total, no MP data found", filePath, strconv.Itoa(l))
+				return
+			}
+		}
+
+		l++
+		if l < headerLine {
+			// Skip the line
+			_, err := reader.ReadString('\n')
+			if err != nil {
+				if err.Error() == "EOF" {
+					log.Printf("Reading completed for %s, %s lines in total (last line w/o line break), no MP data found", filePath, strconv.Itoa(l))
+					return
+				}
+			}
+		} else {
+			break
+		}
+	}
+	csvReader := csv.NewReader(reader)
+	dec, err := csvutil.NewDecoder(csvReader)
+	if err != nil {
+		log.Printf("Error occured reading %s, %v", filePath, err.Error())
+		return
+	}
+
+	j := 0
+	for {
+		j++
+		_, err := reader.Peek(1)
+		if err != nil {
+			if err.Error() == "EOF" {
+				return
+			}
+		}
+
+		record := row
+		err = dec.Decode(&record)
+		if err != nil {
+			log.Printf("Error occured reading %s, %v", filePath, err.Error())
+			break
+		}
 		dataChn <- &record
 	}
 }
@@ -421,7 +482,6 @@ func ParseCsvMap(filename string) (map[string][]string, error) {
 			if val != "" {
 				stringMap[keys[j]] = append(stringMap[keys[j]], val)
 			}
-
 		}
 	}
 
