@@ -47,27 +47,10 @@ func ReadConfig(c *viper.Viper) {
 	}
 }
 
-func GetTableName(tbl string) string {
-	return Conf.GetString("tableNames." + tbl)
-}
-
 func GetEnumName(enm string) string {
 	return Conf.GetString("enumNames." + enm)
 }
 
 func GetFileName(s string) string {
 	return Conf.GetString("Tables." + s)
-}
-
-// For formula parser
-type FormulaParserRun struct {
-	Name    string
-	PrdFile string
-	LibFile string
-}
-
-func GetFormulaParserRuns() []FormulaParserRun {
-	var runs []FormulaParserRun
-	Conf.UnmarshalKey("Runs", &runs)
-	return runs
 }

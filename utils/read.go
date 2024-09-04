@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func GetFile(fileName string, paths []string) (fileLoc string) {
+func GetFilePath(fileName string, paths []string) (fileLoc string) {
 	for _, path := range paths {
 		files, err := os.ReadDir(path)
 		if err != nil {

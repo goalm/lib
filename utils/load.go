@@ -9,7 +9,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/jszwec/csvutil"
@@ -41,19 +40,6 @@ func LoadCsvToEnum(filePath string) *Enum {
 		}
 	}
 	return m
-}
-
-func StreamGenericFiles[T any](filePaths []string, row T, dataChn chan *T) {
-	wg := sync.WaitGroup{}
-	for _, filePath := range filePaths {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			StreamGenericCsvFile(filePath, row, dataChn)
-		}()
-	}
-	wg.Wait()
-	close(dataChn)
 }
 
 func StreamGenericCsvFile[T any](filePath string, row T, dataChn chan *T) {
@@ -459,6 +445,9 @@ func LoadCsv[T any](fileName string, row T) []*T {
 		data = append(data, &record)
 	}
 
+	if len(data) == 0 {
+		log.Println("No data found in "+fileName, "or data format is not compatible")
+	}
 	return data
 }
 

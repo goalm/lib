@@ -39,9 +39,3 @@ func InitializePath(path string) {
 	}
 	os.MkdirAll(path, os.ModePerm)
 }
-
-func InitializePaths(path ...string) {
-	for _, p := range path {
-		InitializePath(p)
-	}
-}
